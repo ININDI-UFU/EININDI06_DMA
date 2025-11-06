@@ -1,4 +1,4 @@
-#include <iikitmini.h>      // Biblioteca base do framework Arduino
+#include <iikit.h>      // Biblioteca base do framework Arduino
 #include "util/AdcDmaEsp.h" // Classe para configuração do ADC e DMA
 
 void osciloscope(const int16_t *y, size_t ylen)

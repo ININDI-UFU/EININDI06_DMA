@@ -1,4 +1,4 @@
-#include <iikitmini.h> // Biblioteca base do framework Arduino
+#include <iikit.h> // Biblioteca base do framework Arduino
 #include "util/jtask.h"
 
 // Configurações para a geração da senoide:
