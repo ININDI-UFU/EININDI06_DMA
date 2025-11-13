@@ -5,7 +5,7 @@ SimpleADC_DMA dma;
 
 void osciloscope(uint16_t* samples, size_t len) {
     // for(int i=0; i < count; i++){
-        wserial::plot("adcValue", (uint32_t)0.10, samples, len);
+        wserial::plot("adcValue", (uint32_t)10, samples, len);
     // }
 }
 
