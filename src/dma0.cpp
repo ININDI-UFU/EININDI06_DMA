@@ -12,29 +12,15 @@ void setup() {
     delay(1000);
     wserial::println();
     wserial::println("=== Teste ADC DMA ESP32 ===");
-    // Exemplo: ADC1_CHANNEL_1 → GPIO39
-    //          ADC1_CHANNEL_0 → GPIO36
-    if (!adcDma.begin(ADC1_CHANNEL_1, 1000)) {  // 1 kHz
-        wserial::println("Falha ao iniciar ADC DMA");
-        while (true) {
-            delay(1000);
-        }
-    }
-    wserial::println("ADC DMA iniciado.");
+
+    // OBS: begin() agora aceita: (GPIO, sample_rate)
+    bool ok = adcDma.beginGPIO(36,4000,10);
+    if (!ok) wserial::println("Falha ao iniciar ADC DMA!");
+    else wserial::println("ADC DMA iniciado com sucesso.");
 }
 
 void loop() {
     IIKit.loop();
-    // 1) Coleta o que o DMA já produziu
-    adcDma.poll();
-    // 2) De tempos em tempos, leia tudo o que chegou
-    static uint32_t lastPrint = 0;
-    uint32_t now = millis();
-    if (now - lastPrint >= 100) {  // a cada 100 ms
-        lastPrint = now;
-        size_t n = adcDma.read(readBuffer, 56);
-        if (n > 0) {
-            wserial::plot("adcValue", 1, readBuffer, n);
-        }
-    }
+    size_t n = adcDma.read(samples,BLOCK_SIZE); // Lê o bloco completo (bloqueante)
+    if (n > 0)  wserial::plot("adcValue", 1, samples, n); // Envia para o LasecPlot
 }
