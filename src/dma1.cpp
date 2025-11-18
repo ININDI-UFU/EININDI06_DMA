@@ -1,5 +1,6 @@
 #include <iikit.h> // Biblioteca base do framework Arduino
-#include "util/jtask.h"
+#include <driver/dac.h>
+#include "AdcDmaEsp.h"
 
 // 1) Configurações para o DAC (gerano um seno)
 const int SAMPLES = 100;
@@ -23,15 +24,6 @@ void makePoints()
         int dacValue = (int)((s + 1.0) * 70.0f + 100.0f) ; // mapeia: -1 → 25 e 1 → 225
         sineTable[i] = (uint8_t) dacValue;
     }
-}
-
-//uint8_t sampleIndex = 0;
-void buildWave()
-{
-    static uint8_t sampleIndex = 0;
-    //dacWrite(def_pin_DAC1, sineTable[sampleIndex]);
-    ledcWrite(PWM_CHANNEL, sineTable[sampleIndex]);
-    sampleIndex = (sampleIndex + 1) % NUMSAMPLES;
 }
 
 void setup()
