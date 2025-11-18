@@ -1,20 +1,27 @@
 #include <iikit.h> // Biblioteca base do framework Arduino
 #include "util/jtask.h"
 
-// Configurações para a geração da senoide:
-#define PWM_CHANNEL  0
-#define NUMSAMPLES 100 // Número de amostras por período da senoide
-uint8_t sineTable[NUMSAMPLES];
+// 1) Configurações para o DAC (gerano um seno)
+const int SAMPLES = 100;
+uint8_t sineTable[SAMPLES];
+volatile int sineIndex = 0;
+    
+// === Timer callback ===
+void IRAM_ATTR onTimer(void *param) {
+    dac_output_voltage(DAC_CHANNEL_1, sineTable[sineIndex++]);// Envia o próximo ponto da senoide para o DAC
+    if (sineIndex >= SAMPLES) sineIndex = 0;  // volta pro início da tabela
+}
 
 // Gera a tabela de valores para a senoide:
 void makePoints()
 {
     // Mapeamos a senoide (de -1 a 1) para valores de 0 a 255, que o DAC espera.
-    for (int i = 0; i < NUMSAMPLES; i++)
+    for (int i = 0; i < SAMPLES; i++)
     {
-        float angle = (2 * PI * i) / NUMSAMPLES;
+        float angle = (2 * PI * i) / SAMPLES;
         float s = sin(angle);
-        sineTable[i] = (uint8_t)((s + 1.0) * 80) + 100; // mapeia: -1 → 25 e 1 → 225
+        int dacValue = (int)((s + 1.0) * 70.0f + 100.0f) ; // mapeia: -1 → 25 e 1 → 225
+        sineTable[i] = (uint8_t) dacValue;
     }
 }
 
@@ -30,12 +37,19 @@ void buildWave()
 void setup()
 {
     IIKit.setup();
-    ledcAttachPin(def_pin_DAC1, PWM_CHANNEL);
-    ledcSetup(PWM_CHANNEL, 500, 10); // Frequência 500Hz, 10 bits de resolução
     makePoints();
-    //Para gerar uma senoide de 100Hz com 100 amostras, o período total é 10000 µs.
-    //Assim, cada amostra deve ser atualizada a cada 10000/100 = 100 µs.
-    jtaskAttachFunc(buildWave, 1000UL);
+
+    // === Configura o timer de alta precisão ===
+    // DAC1	GPIO 25	DAC_CHANNEL_1
+    // DAC2	GPIO 26	DAC_CHANNEL_2
+    dac_output_enable(DAC_CHANNEL_1);
+    esp_timer_create_args_t timerConf = {};
+    timerConf.callback = &onTimer;
+    timerConf.name = "sineTimer";
+
+    esp_timer_handle_t timer;
+    esp_timer_create(&timerConf, &timer);
+    esp_timer_start_periodic(timer, 166); // 60 Hz com 100 amostras → 6000 Hz → período 166 microsegundos
 }
 
 void loop()
