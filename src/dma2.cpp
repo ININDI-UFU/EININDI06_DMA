@@ -137,5 +137,5 @@ void loop()
 {
     IIKit.loop();
     size_t n = adcDma.read(samples,BLOCK_SIZE); // Lê o bloco completo (bloqueante)
-    if (n > 0)  wserial::plot("adcValue", 1, samples, n); // Envia para o LasecPlot
+    if (n > 0)  wserial::plotRaw("adcValue", 1, samples, n); // Envia para o LasecPlot
 }
